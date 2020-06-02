@@ -30,7 +30,7 @@ class Dynamodb:
         print('--------\n\n')
         
     def sendData(self, t, m):
-        sending_msg = json.dumps({"time_in":t,"mois_in":'{:.2f}'.format(m),"sentmessage":"this is a test from RasPi1"})
+        sending_msg = json.dumps({"time":t,"moisture":'{:.2f}'.format(m)})#"sentmessage":"this is a test from RasPi1"
         
         self.myMQTTClient.subscribe("RaspberryPi/topic_test", 1, self.customCallback)
         self.myMQTTClient.publish("RaspberryPi/topic_test", sending_msg, 1)
