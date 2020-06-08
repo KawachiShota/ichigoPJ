@@ -16,16 +16,16 @@ struct ContentView: View {
     
     var body: some View {
         VStack(){
-            Image("suiteki")
+            Image("suiteki") //"suiteki.png"を表示する
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 50)
-            Text("水分量")
+            Text("水分量") //"水分量"テキストを表示する
                 .font(.largeTitle)
-            Text("\(mData)")
+            Text("\(mData)") //水分量データをテキストで表示する
                 .font(.largeTitle)
                 .frame(width: 340, height: 60, alignment: .center)
-            Button(action: {
+            Button(action: { //ボタンが押されとデータを更新する
                 print("Button Tapped")
                 self.invokeDynamo()
             }){
@@ -42,8 +42,8 @@ struct ContentView: View {
         var data : String!
         
         let getItemInput = AWSDynamoDBScanInput()
-        getItemInput?.tableName = "iot_framework_test_2"
-        getItemInput?.projectionExpression = "moisture"
+        getItemInput?.tableName = "iot_framework_test_2" //テーブル名
+        getItemInput?.projectionExpression = "moisture" //項目名
         //getItemInput?.filterExpression = "contains(0 ,:moisture)"
 
         dynamoDB.scan(getItemInput!).continueWith{ (task: AWSTask?) -> AnyObject? in
@@ -54,7 +54,7 @@ struct ContentView: View {
             
             let listItemOutput = task!.result!
             
-            for itemName in listItemOutput.items! {
+            for itemName in listItemOutput.items! { //itemを一つずつ変数dataに格納する
                 print("\(itemName)")
                 print("\(itemName["moisture"]!.s!)")
                 data = itemName["moisture"]!.s!
@@ -67,7 +67,7 @@ struct ContentView: View {
         
     }
     
-    func dataTextChange(textData :String){
+    func dataTextChange(textData :String){ //テキストを最新の水分量データに更新する
         mData = textData
     }
     
