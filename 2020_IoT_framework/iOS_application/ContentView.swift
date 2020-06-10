@@ -1,8 +1,8 @@
 //
 //  ContentView.swift
-//  iot_framework
+//  iot_framework_ichigo
 //
-//  Created by Kawachi Shota on 2020/05/18.
+//  Created by Kawachi Shota on 2020/06/05.
 //  Copyright © 2020 Kawachi Shota. All rights reserved.
 //
 
@@ -28,6 +28,7 @@ struct ContentView: View {
             Button(action: { //ボタンが押されとデータを更新する
                 print("Button Tapped")
                 self.invokeDynamo()
+                self.reportDynamo()
             }){
                 Text("データ更新")
                     .font(.largeTitle)
@@ -44,7 +45,6 @@ struct ContentView: View {
         let getItemInput = AWSDynamoDBScanInput()
         getItemInput?.tableName = "iot_framework_test_2" //テーブル名
         getItemInput?.projectionExpression = "moisture" //項目名
-        //getItemInput?.filterExpression = "contains(0 ,:moisture)"
 
         dynamoDB.scan(getItemInput!).continueWith{ (task: AWSTask?) -> AnyObject? in
             if let error = task!.error {
@@ -67,11 +67,50 @@ struct ContentView: View {
         
     }
     
-    func dataTextChange(textData :String){ //テキストを最新の水分量データに更新する
+    func reportDynamo(){
+        let dynamoDB = AWSDynamoDB.default()
+        
+        let hashAttribute1 = AWSDynamoDBAttributeValue()
+        hashAttribute1?.s = "kawachi"
+        
+        let hashAttribute2 = AWSDynamoDBAttributeValue()
+        hashAttribute2?.s = self.getDate()
+        
+        let putRequest = AWSDynamoDBPutRequest()
+        putRequest?.item = ["name": hashAttribute1!,"time": hashAttribute2!]
+        
+        let writeRequest = AWSDynamoDBWriteRequest()
+        writeRequest?.putRequest = putRequest
+        
+        let batchWriteRequest = AWSDynamoDBBatchWriteItemInput()
+        batchWriteRequest?.requestItems = ["data_get_report": [writeRequest!]]
+
+        dynamoDB.batchWriteItem(batchWriteRequest!).continueWith{ (task: AWSTask?) -> AnyObject? in
+            if let error = task!.error {
+                print("Error occurred: \(error)")
+                return nil
+            }
+            
+            let listItemOutput = task!.result!
+            print(listItemOutput)
+            
+            return nil
+        }
+        
+    }
+    
+    func dataTextChange(textData :String){ //表示テキストを最新の水分量データに更新する
         mData = textData
     }
     
-
+    func getDate() -> String { //現在の日付、時刻を取得する(例：2100/1/1 12:00:00)
+        let dt = Date()
+        let dateFormatter = DateFormatter()
+        
+        dateFormatter.dateFormat = DateFormatter.dateFormat(fromTemplate: "yMdkHms", options: 0, locale: Locale(identifier: "ja_JP"))
+        
+        return dateFormatter.string(from: dt)
+    }
 }
 
 struct ContentView_Previews: PreviewProvider {
@@ -79,3 +118,4 @@ struct ContentView_Previews: PreviewProvider {
         ContentView()
     }
 }
+
