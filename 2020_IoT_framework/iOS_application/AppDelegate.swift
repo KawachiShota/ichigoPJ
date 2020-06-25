@@ -1,8 +1,8 @@
 //
 //  AppDelegate.swift
-//  iot_framework
+//  iot_framework_ichigo
 //
-//  Created by Kawachi Shota on 2020/05/18.
+//  Created by Kawachi Shota on 2020/06/05.
 //  Copyright © 2020 Kawachi Shota. All rights reserved.
 //
 
@@ -49,4 +49,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
     }
 }
+
+
 
