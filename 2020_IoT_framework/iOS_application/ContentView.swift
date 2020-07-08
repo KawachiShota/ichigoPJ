@@ -34,84 +34,18 @@ struct ContentView: View {
             
             Button(action: { //ボタンが押されとデータを更新する
                 print("Button Tapped")
-                //self.invokeDynamo1()
-                //self.invokeDynamo2()
                 self.invokeDynamo(type: "moisture")
                 self.invokeDynamo(type: "volt")
+                self.reportDynamo()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                    self.postSlack()
+                }
             }){
                 Text("データ更新")
                     .font(.largeTitle)
                     .frame(width: 340, height: 60, alignment: .center)
             }
         }
-    }
-
-    func invokeDynamo1(){ //DynamoDBから水分量のデータを受信する
-        let dynamoDB = AWSDynamoDB.default()
-        
-        var data : String!
-        
-        let getItemInput = AWSDynamoDBScanInput()
-        getItemInput?.tableName = "ichigo_table_kawachi" //テーブル名
-        getItemInput?.projectionExpression = "moisture" //項目名
-
-        dynamoDB.scan(getItemInput!).continueWith{ (task: AWSTask?) -> AnyObject? in
-            if let error = task!.error {
-                print("Error occurred: \(error)")
-                return nil
-            }
-            
-            let listItemOutput = task!.result!
-            
-            for itemName in listItemOutput.items! { //itemを一つずつ変数dataに格納する
-                print("\(itemName)")
-                print("\(itemName["moisture"]!.s!)")
-                data = itemName["moisture"]!.s!
-            }
-            
-            self.dataTextChange1(textData:data)
-            
-            return nil
-        }
-        
-    }
-    
-    func invokeDynamo2(){ //DynamoDBから電圧のデータを受信する
-        let dynamoDB = AWSDynamoDB.default()
-        
-        var data : String!
-        
-        let getItemInput = AWSDynamoDBScanInput()
-        getItemInput?.tableName = "ichigo_table_kawachi" //テーブル名
-        getItemInput?.projectionExpression = "volt" //項目名
-
-        dynamoDB.scan(getItemInput!).continueWith{ (task: AWSTask?) -> AnyObject? in
-            if let error = task!.error {
-                print("Error occurred: \(error)")
-                return nil
-            }
-            
-            let listItemOutput = task!.result!
-            
-            for itemName in listItemOutput.items! { //itemを一つずつ変数dataに格納する
-                print("\(itemName)")
-                print("\(itemName["volt"]!.s!)")
-                data = itemName["volt"]!.s!
-            }
-            
-            self.dataTextChange2(textData:data)
-            
-            return nil
-        }
-        
-    }
-    
-    func dataTextChange1(textData :String){ //表示テキストを最新の水分量データに更新する
-        mData = textData
-    }
-    
-    func dataTextChange2(textData :String){ //表示テキストを最新の電圧データに更新する
-        vData = textData
     }
     
     func invokeDynamo(type :String){
@@ -163,23 +97,34 @@ struct ContentView: View {
     }
     
     func reportDynamo(){ //DynamoDBにデータを送信する
+        //クラスAWSDynamoDBのインスタンスを作成する
         let dynamoDB = AWSDynamoDB.default()
         
+        //クラスAWSDynamoDBAttributeValueの変数sにセットする
+        //var s: String?
         let hashAttribute1 = AWSDynamoDBAttributeValue()
         hashAttribute1?.s = "kawachi"
         
         let hashAttribute2 = AWSDynamoDBAttributeValue()
         hashAttribute2?.s = self.getDate()
         
+        //クラスAWSDynamoDBPutRequestの変数itemに値をセットする
+        //var item: [String : AWSDynamoDBAttributeValue]?
         let putRequest = AWSDynamoDBPutRequest()
         putRequest?.item = ["name": hashAttribute1!,"time": hashAttribute2!]
         
+        //クラスAWSDynamoDBWriteRequestの変数putRequestに値をセットする
+        //var putRequest: AWSDynamoDBPutRequest?
         let writeRequest = AWSDynamoDBWriteRequest()
         writeRequest?.putRequest = putRequest
         
+        //クラスAWSDynamoDBBatchWriteItemInputの変数requestItemsに値をセットする
+        //var requestItems: [String : [AWSDynamoDBWriteRequest]]?
         let batchWriteRequest = AWSDynamoDBBatchWriteItemInput()
         batchWriteRequest?.requestItems = ["data_get_report": [writeRequest!]]
 
+        //クラスAWSDynamoDBの関数batchWriteItemでDynamoDBにデータを送信する
+        //func batchWriteItem(_ request: AWSDynamoDBBatchWriteItemInput) -> Any!
         dynamoDB.batchWriteItem(batchWriteRequest!).continueWith{ (task: AWSTask?) -> AnyObject? in
             if let error = task!.error {
                 print("Error occurred: \(error)")
@@ -203,20 +148,20 @@ struct ContentView: View {
         return dateFormatter.string(from: dt)
     }
     
-    func postSlack(){
+    func postSlack(){ //slackにデータを送信する
         
-        // create the url-request
-        let urlString = "https://hooks.slack.com/services/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"
+        // URLリクエストを作成する
+        let urlString = "https://hooks.slack.com/services/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"
         let request = NSMutableURLRequest(url: NSURL(string: urlString)! as URL)
 
-        // set the method(HTTP-POST)
+        // 変数httpMethodに値をセットする
         request.httpMethod = "POST"
-        // set the header(s)
+        // 変数addValueに値をセットする
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        // set the request-body(JSON)
+        // 変数httpBodyに値をセットする
         let params: [String: String] = [
-            "text": "アプリからslackに送るテストです",
+            "text": "テストです。水分量：\(mData!), 電圧：\(vData!)",
             "icon_emoji": "icon",
             "username": "kawachi"
         ]
@@ -226,7 +171,7 @@ struct ContentView: View {
             print(error.localizedDescription)
         }
 
-        // use NSURLSessionDataTask
+        // NSURLSessionDataTaskを使う
         let task = URLSession.shared.dataTask(with: request as URLRequest, completionHandler: {data, response, error in
             if (error == nil) {
                 let result = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)!
