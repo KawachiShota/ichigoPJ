@@ -1,0 +1,18 @@
+【プログラムを起動する】
+$ main.pyのある場所に移動する。
+$ cd  ~/ichigoPJ-master/2020_IoT_framework/RaspberryPi/main.py
+  　　（ファイル名、フォルダ名は数文字打つとTABキーで補完できる）
+
+ファイルの実行権限を変更する。
+$ sudo chmod 777 main.py
+
+プログラムを実行する。
+$ sudo python main.py
+
+これでターミナルに結果が出力される。
+
+【MQTTのライブラリをインストールする】
+ライブラリがインストールされていない場合があるため、
+プログラムを実行する前に以下を実行する。
+$ sudo pip install AWSIoTPythonSDK
+$ sudo pip install paho-mqtt
